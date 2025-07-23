@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "id": "fluid-lib",
+  "version": "${version}",
+  "name": "Fluid Lib",
+  "description": "This is an example description! Tell everyone what your mod is about!",
+  "authors": [
+    "Me!"
+  ],
+  "accessWidener": "fluidlib.accesswidener",
+  "contact": {
+    "homepage": "https://fabricmc.net/",
+    "sources": "https://github.com/FabricMC/fabric-example-mod"
+  },
+  "license": "CC0-1.0",
+  "icon": "assets/fluid-lib/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "lack.fluidlib.FluidLib"
+    ],
+    "client": [
+      "lack.fluidlib.FluidLibClient"
+    ],
+    "fabric-datagen": [
+      "lack.fluidlib.FluidLibDataGenerator"
+    ],
+    "mm:early_risers": [
+      {
+        "adapter": "kotlin",
+        "value": "lack.fluidlib.enumInjector.CSTER"
+      }
+    ]
+  },
+  "mixins": [
+    "fluid-lib.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.14",
+    "minecraft": "~1.21.8",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}

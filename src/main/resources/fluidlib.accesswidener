@@ -1,0 +1,10 @@
+accessWidener v2 named
+
+accessible field net/minecraft/client/render/Camera$Projection center Lnet/minecraft/util/math/Vec3d;
+
+accessible field net/minecraft/client/render/fog/FogRenderer FOG_MODIFIERS Ljava/util/List;
+mutable field net/minecraft/client/render/fog/FogRenderer FOG_MODIFIERS Ljava/util/List;
+
+accessible method net/minecraft/block/cauldron/CauldronBehavior isUnderwater (Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)Z
+
+accessible method net/minecraft/entity/LivingEntity getBaseWaterMovementSpeedMultiplier ()F

@@ -1,0 +1,25 @@
+{
+  "required": true,
+  "package": "lack.fluidlib.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "AbstractBoatEntityMixin",
+    "EntityMixin",
+    "LivingEntityMixin",
+    "PlayerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  },
+  "client": [
+    "CameraMixin",
+    "ClientPlayerEntityMixin",
+    "FogModifierMixin",
+    "FogRendererMixin",
+    "GameRendererMixin",
+    "WorldRendererMixin"
+  ]
+}
