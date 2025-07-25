@@ -2,7 +2,8 @@ package lack.fluidlib.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.ref.LocalFloatRef;
-import lack.fluidlib.fluid.ModFluid;
+import lack.fluidlib.fluid.FluidProperties;
+import lack.fluidlib.fluid.FluidRegistry;
 import lack.fluidlib.mixinaccessor.EntityAccessor;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -17,74 +18,88 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Debug(export = true)
 @Mixin(AbstractBoatEntity.class)
 public abstract class AbstractBoatEntityMixin extends Entity {
 
-    @Shadow
-    private double fallVelocity;
-
-    public AbstractBoatEntityMixin(EntityType<?> type, World world) {
+    protected AbstractBoatEntityMixin(EntityType<?> type, World world) {
         super(type, world);
     }
 
+    private List<TagKey<Fluid>> getValid() {
+        List<TagKey<Fluid>> allFluids = new ArrayList<>(FluidRegistry.getAll());
+
+        return allFluids.stream().filter(((EntityAccessor) this)::fluidlib$isInFluid).filter(fluid -> FluidRegistry.getFluids().containsKey(fluid)).toList();
+    }
+
     @Unique
-    private List<TagKey<Fluid>> what(FluidState instance) {
-        List<ModFluid> fluidTags = ((EntityAccessor) this).getAllModFluids();
-        return fluidTags.stream().filter(ModFluid::doBoatsFloat).map(ModFluid::getFluidTag).filter(instance::isIn).toList();
+    private List<TagKey<Fluid>> getValidFluids(FluidState fluidState) {
+        return getValid().stream()
+            .filter(fluidState::isIn)
+            .filter(fluid -> {
+                FluidProperties properties = FluidRegistry.getFluids().get(fluid);
+                return properties != null && properties.boatsFloat();
+            })
+            .toList();
+    }
+
+    @Unique
+    private List<TagKey<Fluid>> getValidFluids(AbstractBoatEntity boatEntity) {
+        return getValid().stream()
+            .filter(boatEntity::isSubmergedIn)
+            .filter(fluid -> {
+                FluidProperties properties = FluidRegistry.getFluids().get(fluid);
+                return properties != null && properties.boatsFloat();
+            })
+            .toList();
     }
 
     @Redirect(method = "getWaterHeightBelow", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/fluid/FluidState;isIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
     public boolean allFluids(FluidState instance, TagKey<Fluid> tag) {
-        return !what(instance).isEmpty() || instance.isIn(FluidTags.WATER);
+        return !getValidFluids(instance).isEmpty() || instance.isIn(FluidTags.WATER);
     }
 
     @Redirect(method = "checkBoatInWater", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/fluid/FluidState;isIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
     public boolean check(FluidState instance, TagKey<Fluid> tag) {
-        return !what(instance).isEmpty() || instance.isIn(FluidTags.WATER);
+        return !getValidFluids(instance).isEmpty() || instance.isIn(FluidTags.WATER);
     }
 
     @Redirect(method = "getUnderWaterLocation", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/fluid/FluidState;isIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
     public boolean underwater(FluidState instance, TagKey<Fluid> tag) {
-        return !what(instance).isEmpty() || instance.isIn(FluidTags.WATER);
+        return !getValidFluids(instance).isEmpty() || instance.isIn(FluidTags.WATER);
     }
 
 
     @Redirect(method = "updatePassengerForDismount", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/World;isWater(Lnet/minecraft/util/math/BlockPos;)Z"))
     public boolean passenger(World instance, BlockPos blockPos) {
-        List<ModFluid> fluidTags = ((EntityAccessor) this).getAllModFluids();
-        List<TagKey<Fluid>> validTags = fluidTags.stream().filter(ModFluid::doBoatsFloat).map(ModFluid::getFluidTag)
-            .filter(instance.getFluidState(blockPos)::isIn).toList();
-        return !validTags.isEmpty() || instance.getFluidState(blockPos).isIn(FluidTags.WATER);
+        return !getValidFluids(instance.getFluidState(blockPos)).isEmpty() || instance.getFluidState(blockPos).isIn(FluidTags.WATER);
     }
 
     @Redirect(method = "fall", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/fluid/FluidState;isIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
     public boolean fall(FluidState instance, TagKey<Fluid> tag) {
-        return !what(instance).isEmpty() || instance.isIn(FluidTags.WATER);
+        return !getValidFluids(instance).isEmpty() || instance.isIn(FluidTags.WATER);
     }
 
     @Redirect(method = "canAddPassenger", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/entity/vehicle/AbstractBoatEntity;isSubmergedIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
     public boolean canadd(AbstractBoatEntity instance, TagKey tagKey) {
-        List<ModFluid> fluidTags = ((EntityAccessor) this).getAllModFluids();
-        List<TagKey<Fluid>> validTags = fluidTags.stream().filter(ModFluid::doBoatsFloat)
-            .map(ModFluid::getFluidTag).filter(instance::isSubmergedIn).toList();
-        return !validTags.isEmpty() || instance.isSubmergedIn(FluidTags.WATER);
+        return !getValidFluids(instance).isEmpty() || instance.isSubmergedIn(FluidTags.WATER);
     }
 
     @Inject(method = "updateVelocity", at = @At(value = "INVOKE",
@@ -104,7 +119,7 @@ public abstract class AbstractBoatEntityMixin extends Entity {
 
     @Unique
     private float getSpeedPercentage() {
-        List<ModFluid> fluids = ((EntityAccessor) this).getAllModFluids();
+        List<TagKey<Fluid>> validFluids = getValid();
 
         Box box = this.getBoundingBox();
 
@@ -123,19 +138,25 @@ public abstract class AbstractBoatEntityMixin extends Entity {
         for (int x = minX; x < maxX; x++) {
             for (int y = minY; y < maxY; y++) {
                 for (int z = minZ; z < maxZ; z++) {
-                    pos.set(x,y,z);
+                    pos.set(x, y, z);
                     FluidState fluidState = this.getWorld().getFluidState(pos);
-                    if (fluidState.isEmpty()){
+                    if (fluidState.isEmpty()) {
                         continue;
                     }
                     if (fluidState.isIn(FluidTags.WATER)) {
                         sum += 1f;
                         count++;
                     } else {
-                        Optional<ModFluid> optionalModFluid = fluids.stream()
-                            .filter(fluid -> fluidState.isIn(fluid.getFluidTag())).findAny();
-                        if (optionalModFluid.isPresent()) {
-                            sum += optionalModFluid.get().getBoatSpeedModifier();
+
+                        Optional<Float> optionalBoatSpeed = validFluids.stream()
+                            .filter(fluidState::isIn)
+                            .map(FluidRegistry.getFluids()::get)
+                            .filter(Objects::nonNull)
+                            .map(FluidProperties::boatSpeedModifier)
+                            .findAny();
+
+                        if (optionalBoatSpeed.isPresent()) {
+                            sum += optionalBoatSpeed.get();
                             count++;
                         }
                     }

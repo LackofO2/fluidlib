@@ -1,6 +1,6 @@
 package lack.fluidlib;
 
-import lack.fluidlib.test.ExampleFluid;
+import lack.fluidlib.example.FluidExample;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +19,7 @@ public class FluidLib implements ModInitializer {
         // However, some things (like resources) may still be uninitialized.
         // Proceed with mild caution.
 
-ExampleFluid.init();
+FluidExample.init();
 
 
 

@@ -1,4 +1,4 @@
-package lack.fluidlib.test;
+package lack.fluidlib.example;
 
 import lack.fluidlib.fog.ModFogModifier;
 import lack.fluidlib.fog.ModSubmersionType;
@@ -27,10 +27,10 @@ public class AcidFogModifier extends ModFogModifier {
             data.environmentalEnd = viewDistance * 0.5F;
         } else if (cameraEntity instanceof LivingEntity livingEntity && livingEntity.hasStatusEffect(StatusEffects.FIRE_RESISTANCE)) {
             data.environmentalStart = 0.0F;
-            data.environmentalEnd = 5.0F;
+            data.environmentalEnd = 20.0F;
         } else {
-            data.environmentalStart = 0.25F;
-            data.environmentalEnd = 1.0F;
+            data.environmentalStart = 0F;
+            data.environmentalEnd = viewDistance * 0.35F;
         }
 
         data.skyEnd = data.environmentalEnd;
@@ -40,6 +40,6 @@ public class AcidFogModifier extends ModFogModifier {
 
     @Override
     public boolean shouldApply(@Nullable ModSubmersionType submersionType, Entity cameraEntity) {
-        return submersionType == Test.ACID;
+        return submersionType == ModCameraSubmersionTypes.ACID;
     }
 }

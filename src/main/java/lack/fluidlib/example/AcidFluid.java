@@ -1,4 +1,4 @@
-package lack.fluidlib.test;
+package lack.fluidlib.example;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -29,17 +29,17 @@ import java.util.Optional;
 public abstract class AcidFluid extends FlowableFluid {
     @Override
     public Fluid getFlowing() {
-        return ExampleFluid.ACID_FLOWING;
+        return FluidExample.ACID_FLOWING;
     }
 
     @Override
     public Fluid getStill() {
-        return ExampleFluid.ACID_STILL;
+        return FluidExample.ACID_STILL;
     }
 
     @Override
     public Item getBucketItem() {
-        return ExampleFluid.ACID_BUCKET;
+        return FluidExample.ACID_BUCKET;
     }
 
     @Override
@@ -82,12 +82,12 @@ public abstract class AcidFluid extends FlowableFluid {
 
     @Override
     public BlockState toBlockState(FluidState state) {
-        return ExampleFluid.ACID.getDefaultState().with(FluidBlock.LEVEL, getBlockStateLevel(state));
+        return FluidExample.ACID.getDefaultState().with(FluidBlock.LEVEL, getBlockStateLevel(state));
     }
 
     @Override
     public boolean matchesType(net.minecraft.fluid.Fluid fluid) {
-        return fluid == ExampleFluid.ACID_STILL || fluid == ExampleFluid.ACID_FLOWING;
+        return fluid == FluidExample.ACID_STILL || fluid == FluidExample.ACID_FLOWING;
     }
 
     @Override
@@ -102,7 +102,7 @@ public abstract class AcidFluid extends FlowableFluid {
 
     @Override
     public boolean canBeReplacedWith(FluidState state, BlockView world, BlockPos pos, net.minecraft.fluid.Fluid fluid, Direction direction) {
-        return direction == Direction.DOWN && !fluid.isIn(ModFluidTags.ACID);
+        return direction == Direction.DOWN && !fluid.isIn(FluidExample.ACID_TAG);
     }
 
     @Override

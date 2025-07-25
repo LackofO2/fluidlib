@@ -14,12 +14,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import static net.minecraft.block.cauldron.CauldronBehavior.*;
 
 public class CauldronBehaviorBuilder {
-    public static final HashMap<Item, CauldronBehavior.CauldronBehaviorMap> CAULDRON_BEHAVIOR_MAP = new HashMap<>();
-
+    protected static final Map<Item, CauldronBehavior.CauldronBehaviorMap> CAULDRON_BEHAVIOR_MAP = new HashMap<>();
 
     private CauldronBehaviorBuilder() {
     }
@@ -36,7 +36,6 @@ public class CauldronBehaviorBuilder {
         CAULDRON_BEHAVIOR_MAP.put(bucket, builder.cauldronBehaviorMap);
         return builder;
     }
-
 
     public CauldronBehaviorBuilder addToMap(Item item, CauldronBehavior cauldronBehavior) {
         cauldronBehaviorMap.map().put(item, cauldronBehavior);
