@@ -1,5 +1,8 @@
 package lack.fluidlib.example;
 
+import lack.fluidlib.example.test.FBlocks;
+import lack.fluidlib.example.test.FFluids;
+import lack.fluidlib.example.test.Fitems;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.FluidBlock;
@@ -29,17 +32,17 @@ import java.util.Optional;
 public abstract class AcidFluid extends FlowableFluid {
     @Override
     public Fluid getFlowing() {
-        return FluidExample.ACID_FLOWING;
+        return FFluids.ACID_FLOWING;
     }
 
     @Override
     public Fluid getStill() {
-        return FluidExample.ACID_STILL;
+        return FFluids.ACID_STILL;
     }
 
     @Override
     public Item getBucketItem() {
-        return FluidExample.ACID_BUCKET;
+        return Fitems.ACID_BUCKET;
     }
 
     @Override
@@ -82,12 +85,12 @@ public abstract class AcidFluid extends FlowableFluid {
 
     @Override
     public BlockState toBlockState(FluidState state) {
-        return FluidExample.ACID.getDefaultState().with(FluidBlock.LEVEL, getBlockStateLevel(state));
+        return FBlocks.ACID.getDefaultState().with(FluidBlock.LEVEL, getBlockStateLevel(state));
     }
 
     @Override
     public boolean matchesType(net.minecraft.fluid.Fluid fluid) {
-        return fluid == FluidExample.ACID_STILL || fluid == FluidExample.ACID_FLOWING;
+        return fluid == FFluids.ACID_STILL || fluid == FFluids.ACID_FLOWING;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package lack.fluidlib.example;
 
 import lack.fluidlib.FluidLib;
+import lack.fluidlib.example.test.FFluids;
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry;
 import net.fabricmc.fabric.api.client.render.fluid.v1.SimpleFluidRenderHandler;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap;
@@ -13,11 +14,11 @@ public class FluidExampleClient {
     }
 
     static {
-        FluidRenderHandlerRegistry.INSTANCE.register(FluidExample.ACID_STILL, FluidExample.ACID_FLOWING, new SimpleFluidRenderHandler(
+        FluidRenderHandlerRegistry.INSTANCE.register(FFluids.ACID_STILL, FFluids.ACID_FLOWING, new SimpleFluidRenderHandler(
             Identifier.of(FluidLib.MOD_ID, "block/acid_still"),
             Identifier.of(FluidLib.MOD_ID, "block/acid_flow")
         ));
-        BlockRenderLayerMap.putFluids(BlockRenderLayer.TRANSLUCENT, FluidExample.ACID_STILL, FluidExample.ACID_FLOWING);
+        BlockRenderLayerMap.putFluids(BlockRenderLayer.TRANSLUCENT, FFluids.ACID_STILL, FFluids.ACID_FLOWING);
 
     }
 }

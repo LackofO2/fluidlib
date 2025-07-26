@@ -1,6 +1,10 @@
 package lack.fluidlib.example;
 
+
 import lack.fluidlib.cauldron.CauldronBehaviorBuilder;
+import lack.fluidlib.example.test.FBlocks;
+import lack.fluidlib.example.test.FFluids;
+import lack.fluidlib.example.test.Fitems;
 import lack.fluidlib.fluid.FluidBuilder;
 import lack.fluidlib.fog.ModFogCreator;
 import lack.fluidlib.registry.SubmersionTypeRegistry;
@@ -27,33 +31,21 @@ import static lack.fluidlib.FluidLib.MOD_ID;
 public class FluidExample {
 
     public static void init() {
+        FFluids.init();
+        FBlocks.init();
+        Fitems.init();
+
     }
 
-    public static final TagKey<Fluid> ACID_TAG;
-    public static final FlowableFluid ACID_STILL;
-    public static final FlowableFluid ACID_FLOWING;
-    public static final Block ACID;
-    public static final Block ACID_CAULDRON;
-    public static final Item ACID_BUCKET;
+    public static final TagKey<Fluid> ACID_TAG = TagKey.of(RegistryKeys.FLUID, Identifier.ofVanilla("acid"));
+    public static final FluidBuilder ACID_BUILDER = new FluidBuilder(new AcidFluid.Still(),
+        new AcidFluid.Flowing(), new AcidProperties(), ACID_TAG);
+
+
 
 
     static {
-        ACID_TAG = TagKey.of(RegistryKeys.FLUID, Identifier.ofVanilla("acid"));
-        FluidBuilder acidBuilder = new FluidBuilder(new AcidFluid.Still(),
-            new AcidFluid.Flowing(), new AcidProperties(), ACID_TAG);
-        ACID_STILL = acidBuilder.createStillFluid(Identifier.of(MOD_ID, "acid"));
-        ACID_FLOWING = acidBuilder.createFlowingFluid(Identifier.of(MOD_ID, "acid_flowing"));
 
-        ACID = acidBuilder.createBlock(Identifier.of(MOD_ID, "acid"), AbstractBlock.Settings.create()
-            .mapColor(MapColor.GREEN).replaceable().noCollision()
-            .ticksRandomly().strength(100.0F).luminance(state -> 3)
-            .pistonBehavior(PistonBehavior.DESTROY).dropsNothing()
-            .liquid().sounds(BlockSoundGroup.INTENTIONALLY_EMPTY));
-        ACID_BUCKET = acidBuilder.createBucket(Identifier.of(MOD_ID, "acid_bucket"), new Item.Settings()
-            .recipeRemainder(Items.BUCKET).maxCount(1));
-        CauldronBehaviorBuilder behaviorBuilder = CauldronBehaviorBuilder.create("acid", ACID_BUCKET);
-        ACID_CAULDRON = acidBuilder.createCauldron(Identifier.of(MOD_ID, "acid_cauldron"), AbstractBlock.Settings
-            .copyShallow(Blocks.CAULDRON), behaviorBuilder);
 
         ModFogCreator.create(new AcidFogModifier());
 
@@ -79,7 +71,7 @@ public class FluidExample {
                 }
             }
         };
-        DispenserBlock.registerBehavior(ACID_BUCKET, acidBucketBehavior);
+        DispenserBlock.registerBehavior(Fitems.ACID_BUCKET, acidBucketBehavior);
 
     }
 }
