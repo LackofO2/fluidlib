@@ -1,17 +1,17 @@
 package lack.fluidlib.fluid;
 
-import lack.fluidlib.example.FluidExample;
 import lack.fluidlib.mixinaccessor.EntityAccessor;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.math.Vec3d;
 
 public class WaterSpeedModifier implements FluidProperties.SpeedModifier {
     @Override
     public boolean accept(LivingEntity livingEntity, boolean falling, double entityY, double effectiveGravity) {
-        return ((EntityAccessor) livingEntity).fluidlib$isInFluid(FluidExample.ACID_TAG);
+        return ((EntityAccessor) livingEntity).fluidlib$isInFluid(FluidTags.WATER);
     }
 
     @Override
