@@ -3,10 +3,20 @@
   "package": "lack.fluidlib.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "AbstractBoatEntityMixin",
-    "EntityMixin",
-    "LivingEntityMixin",
-    "PlayerMixin"
+    "entity.AbstractBoatEntityMixin",
+    "entity.EntityMixin",
+    "entity.LivingEntityMixin",
+    "entity.MinecartControllersMixin$DefaultMinecartControllerMixin",
+    "entity.MinecartControllersMixin$ExperimentalMinecartControllerMixin",
+    "entity.PlayerMixin",
+    "example.FluidPropertyMixin",
+    "fluidlog.BucketItemMixin",
+    "fluidlog.LuminanceAccessor",
+    "fluidlog.LuminanceMixin",
+    "fluidlog.old.LeavesBlockMixin",
+    "fluidlog.old.SlabBlockMixin",
+    "fluidlog.old.StairsBlockMixin",
+    "fluidlog.old.WallBlockMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -15,11 +25,12 @@
     "requireAnnotations": true
   },
   "client": [
-    "CameraMixin",
-    "ClientPlayerEntityMixin",
-    "FogModifierMixin",
-    "FogRendererMixin",
-    "GameRendererMixin",
-    "WorldRendererMixin"
+    "entity.ClientPlayerEntityMixin",
+    "entity.InGameHudMixin",
+    "fog.CameraMixin",
+    "fog.FogModifierMixin",
+    "fog.FogRendererMixin",
+    "fog.GameRendererMixin",
+    "fog.WorldRendererMixin"
   ]
 }

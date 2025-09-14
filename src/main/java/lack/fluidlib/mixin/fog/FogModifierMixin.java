@@ -1,4 +1,4 @@
-package lack.fluidlib.mixin;
+package lack.fluidlib.mixin.fog;
 
 import lack.fluidlib.fog.ModFogModifier;
 import lack.fluidlib.fog.ModSubmersionType;

@@ -1,7 +1,6 @@
-package lack.fluidlib.mixin;
+package lack.fluidlib.mixin.fog;
 
 import lack.fluidlib.fog.ModSubmersionType;
-import lack.fluidlib.fog.ModSubmersionTypes;
 import lack.fluidlib.mixinaccessor.CameraAccessor;
 import lack.fluidlib.registry.SubmersionPredicate;
 import lack.fluidlib.registry.SubmersionTypeRegistry;

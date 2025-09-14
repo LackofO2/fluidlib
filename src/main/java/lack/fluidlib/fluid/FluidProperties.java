@@ -6,6 +6,10 @@ import net.minecraft.util.math.Vec3d;
 
 public abstract class FluidProperties {
 
+    public int luminance() {
+        return 0;
+    }
+
     public boolean canSwim() {
         return true;
     }
@@ -13,6 +17,11 @@ public abstract class FluidProperties {
     public boolean suffocates(Entity entity) {
         return true;
     }
+
+    public boolean fluidLoggable() {
+        return true;
+    }
+
     public float suffocationSpeed(Entity entity) {
         return 1.0f;
     }
@@ -33,11 +42,11 @@ public abstract class FluidProperties {
         return 1.0f;
     }
 
-    public boolean boatsFloat() {
+    public boolean boatsFloatIn() {
         return true;
     }
 
-    public float boatSpeedModifier() {
+    public float vehicleSpeedModifier() {
         return 1.0f;
     }
 

@@ -22,33 +22,30 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class FluidBuilder {
-    private final FlowableFluid fluidStill;
-    private final FlowableFluid fluidFlowing;
-    private final FluidProperties fluidProperties;
+    public final FluidProperties fluidProperties;
     private final TagKey<Fluid> fluidTagKey;
 
-    private final BiFunction<AbstractBlock.Settings, CauldronBehavior.CauldronBehaviorMap, Block> cauldronFactory;
-
-    public FluidBuilder(FlowableFluid fluidStill, FlowableFluid fluidFlowing, FluidProperties properties, TagKey<Fluid> fluidTagKey) {
-        this(fluidStill, fluidFlowing, properties, fluidTagKey, ModdedCauldronBlock::new);
-    }
-
-    public FluidBuilder(FlowableFluid fluidStill, FlowableFluid fluidFlowing, FluidProperties properties,
-                        TagKey<Fluid> fluidTagKey, BiFunction<AbstractBlock.Settings, CauldronBehavior.CauldronBehaviorMap, Block> cauldronFactory) {
-        this.fluidStill = fluidStill;
-        this.fluidFlowing = fluidFlowing;
-        this.fluidProperties = properties;
+    public FluidBuilder(FluidProperties fluidProperties, TagKey<Fluid> fluidTagKey) {
+        this.fluidProperties = fluidProperties;
         this.fluidTagKey = fluidTagKey;
-        this.cauldronFactory = cauldronFactory;
     }
 
-    public FlowableFluid createStillFluid(Identifier identifier) {
+    /**
+     * Must be registered first.
+     * Used to register still fluids & adds to the fluid registry.
+     */
+    public FlowableFluid createStillFluid(FlowableFluid still, Identifier identifier) {
         addToFluidRegistry();
-        return registerFluid(fluidStill, identifier);
+//        addToFluidloggableProperty(still);
+        return registerFluid(still, identifier);
     }
 
-    public FlowableFluid createFlowingFluid(Identifier identifier) {
-        return registerFluid(fluidFlowing, identifier);
+    /**
+     * Must be registered second.
+     * Used to register flowing fluids.
+     */
+    public FlowableFluid createFlowingFluid(FlowableFluid flowing, Identifier identifier) {
+        return registerFluid(flowing, identifier);
     }
 
     private FlowableFluid registerFluid(FlowableFluid fluid, Identifier identifier) {
@@ -56,21 +53,35 @@ public class FluidBuilder {
     }
 
     private void addToFluidRegistry() {
-        if (fluidProperties.canSwim()) {
-            FluidRegistry.SWIMMABLE.add(fluidTagKey);
-        } else {
-            FluidRegistry.NONSWIMMABLE.add(fluidTagKey);
-        }
+//        if (fluidProperties.canSwim()) {
+//            FluidRegistry.SWIMMABLE.add(fluidTagKey);
+//        } else {
+//            FluidRegistry.NONSWIMMABLE.add(fluidTagKey);
+//        }
 
-        FluidRegistry.FLUIDS.put(fluidTagKey, fluidProperties);
+        FluidRegistry.addToFluids(fluidTagKey, fluidProperties);
+    }
+//
+//    private void addToFluidloggableProperty(FlowableFluid still) {
+//        if (fluidProperties.fluidLoggable()) {
+//            FluidProperty.addToValues(FluidloggableFluid.of(still, fluidProperties));
+//        }
+//    }
+
+    /**
+     * Must be registered third.
+     * Used to register block for fluids.
+     */
+    public Block createBlock(Identifier id, FlowableFluid fluid, AbstractBlock.Settings settings) {
+        return registerBlock(id, settings1 -> new FluidBlock(fluid, settings), settings);
     }
 
-    public Block createBlock(Identifier id, AbstractBlock.Settings settings) {
-        return registerBlock(id, settings1 -> new FluidBlock(fluidStill, settings), settings);
-    }
-
-    public Item createBucket(Identifier bucketId, Item.Settings settings) {
-        return registerBucket(bucketId, settings1 -> new BucketItem(fluidStill, settings1), settings);
+    /**
+     * Must be registered fourth.
+     * Used to register fluid buckets.
+     */
+    public Item createBucket(Identifier bucketId, FlowableFluid fluid, Item.Settings settings) {
+        return registerBucket(bucketId, settings1 -> new BucketItem(fluid, settings), settings);
     }
 
     public static Block registerBlock(Identifier id, Function<AbstractBlock.Settings, Block> factory, AbstractBlock.Settings settings) {
@@ -88,9 +99,16 @@ public class FluidBuilder {
         return Registry.register(Registries.ITEM, key, item);
     }
 
+    /**
+     * Must be registered fifth.
+     * Used to register block for fluids.
+     */
+    public Block createCauldron(Identifier id, AbstractBlock.Settings settings, CauldronBehaviorBuilder cauldronBehaviorBuilder, BiFunction<AbstractBlock.Settings, CauldronBehavior.CauldronBehaviorMap, Block> cauldronFactory) {
+        return registerCauldron(id, settings1 -> cauldronFactory.apply(settings, cauldronBehaviorBuilder.export()), settings, cauldronBehaviorBuilder);
+    }
 
     public Block createCauldron(Identifier id, AbstractBlock.Settings settings, CauldronBehaviorBuilder cauldronBehaviorBuilder) {
-        return registerCauldron(id, settings1 -> cauldronFactory.apply(settings, cauldronBehaviorBuilder.export()), settings, cauldronBehaviorBuilder);
+        return createCauldron(id, settings, cauldronBehaviorBuilder, ModdedCauldronBlock::new);
     }
 
     public Block registerCauldron(Identifier id, Function<AbstractBlock.Settings, Block> blockFactory, AbstractBlock.Settings settings, CauldronBehaviorBuilder cauldronBehaviorBuilder) {

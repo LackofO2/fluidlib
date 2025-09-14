@@ -1,9 +1,8 @@
-package lack.fluidlib.mixin;
+package lack.fluidlib.mixin.fog;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import lack.fluidlib.enumInjector.CST;
 import lack.fluidlib.fog.ModSubmersionType;
-import lack.fluidlib.fog.ModSubmersionTypes;
 import lack.fluidlib.fog.VanillaSubmersionType;
 import lack.fluidlib.mixinaccessor.CameraAccessor;
 import net.minecraft.block.enums.CameraSubmersionType;

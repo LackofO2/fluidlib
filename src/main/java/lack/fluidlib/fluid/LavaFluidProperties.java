@@ -4,6 +4,11 @@ import net.minecraft.entity.Entity;
 
 public class LavaFluidProperties extends FluidProperties {
     @Override
+    public int luminance() {
+        return 15;
+    }
+
+    @Override
     public boolean canSwim() {
         return false;
     }
@@ -34,12 +39,12 @@ public class LavaFluidProperties extends FluidProperties {
     }
 
     @Override
-    public boolean boatsFloat() {
+    public boolean boatsFloatIn() {
         return false;
     }
 
     @Override
-    public float boatSpeedModifier() {
+    public float vehicleSpeedModifier() {
         return 0.0f;
     }
 

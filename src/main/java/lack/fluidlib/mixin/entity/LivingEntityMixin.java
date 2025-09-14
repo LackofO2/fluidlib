@@ -1,4 +1,4 @@
-package lack.fluidlib.mixin;
+package lack.fluidlib.mixin.entity;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import lack.fluidlib.fluid.FluidProperties;
@@ -23,8 +23,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -58,9 +56,8 @@ public abstract class LivingEntityMixin extends Entity implements EntityAccessor
     @Inject(method = "travelFlying(Lnet/minecraft/util/math/Vec3d;FFF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;updateVelocity(FLnet/minecraft/util/math/Vec3d;)V", ordinal = 2), cancellable = true)
     protected void travelFlying(Vec3d movementInput, float inWaterSpeed, float inLavaSpeed, float regularSpeed, CallbackInfo ci) {
         LivingEntity livingEntity = (LivingEntity) (Object) this;
-        List<TagKey<Fluid>> allFluids = new ArrayList<>(FluidRegistry.getAll());
-
-        Optional<FluidProperties> fluidProperties = allFluids.stream().filter(this::fluidlib$isInFluid).filter(FluidRegistry.getFluids()::containsKey).map(FluidRegistry.getFluids()::get).findAny();
+        Optional<FluidProperties> fluidProperties = FluidRegistry.applyPredicateStream(entry -> fluidlib$isInFluid(entry.getKey()))
+            .map(Map.Entry::getValue).findAny();
 
         if (fluidProperties.isPresent()) {
             this.updateVelocity(fluidProperties.get().flyingEntitySpeed(livingEntity), movementInput);
@@ -77,15 +74,7 @@ public abstract class LivingEntityMixin extends Entity implements EntityAccessor
     @Redirect(method = "tickMovement", at = @At(value = "FIELD",
         target = "Lnet/minecraft/registry/tag/FluidTags;WATER:Lnet/minecraft/registry/tag/TagKey;", ordinal = 0))
     public TagKey<Fluid> fluidHeightNonSwimmable2() {
-        List<TagKey<Fluid>> allFluids = new ArrayList<>(FluidRegistry.getAll());
-
-        for (TagKey<Fluid> swimmable : allFluids) {
-            if (fluidlib$isInFluid(swimmable)) {
-                return swimmable;
-            }
-        }
-
-        return FluidTags.WATER;
+        return FluidRegistry.applyPredicateStream(entry -> fluidlib$isInFluid(entry.getKey())).map(Map.Entry::getKey).findAny().orElse(FluidTags.WATER);
     }
 
 
@@ -112,12 +101,12 @@ public abstract class LivingEntityMixin extends Entity implements EntityAccessor
     private void waterToSwimmableFluid2(Vec3d movementInput, CallbackInfo ci, @Local boolean falling, @Local(ordinal = 0) double entityY, @Local(ordinal = 1) double effectiveGravity) {
         LivingEntity entity = (LivingEntity) (Object) this;
 
-        List<TagKey<Fluid>> allFluids = new ArrayList<>(FluidRegistry.getAll());
 
         boolean shouldCancel = false;
-        for (TagKey<Fluid> fluid : allFluids) {
-            if (fluidlib$isInFluid(fluid) && FluidRegistry.getFluids().containsKey(fluid)) {
-                FluidProperties.SpeedModifier speedModifier = FluidRegistry.getFluids().get(fluid).speedModifier();
+
+        for (Map.Entry<TagKey<Fluid>, FluidProperties> entry : FluidRegistry.getFluids().entrySet()) {
+            if (fluidlib$isInFluid(entry.getKey())) {
+                FluidProperties.SpeedModifier speedModifier = entry.getValue().speedModifier();
                 if (speedModifier.accept(entity, falling, entityY, effectiveGravity)) {
                     shouldCancel = true;
                     speedModifier.apply(entity, falling, entityY, effectiveGravity, movementInput);
@@ -137,9 +126,7 @@ public abstract class LivingEntityMixin extends Entity implements EntityAccessor
     @Redirect(method = "baseTick", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/entity/LivingEntity;isSubmergedIn(Lnet/minecraft/registry/tag/TagKey;)Z", ordinal = 0))
     public boolean suffocation1(LivingEntity instance, TagKey tagKey) {
-        Map<TagKey<Fluid>, FluidProperties> fluids = FluidRegistry.getFluids();
-        return FluidRegistry.getAll().stream().filter(instance::isSubmergedIn).filter(fluids::containsKey)
-            .anyMatch(fluidTagKey -> fluids.get(fluidTagKey).suffocates(instance));
+        return FluidRegistry.applyPredicateStream(entry -> instance.isSubmergedIn(entry.getKey())).anyMatch(entry -> entry.getValue().suffocates(instance));
     }
 
 

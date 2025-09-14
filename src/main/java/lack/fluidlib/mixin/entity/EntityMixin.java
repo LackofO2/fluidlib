@@ -1,4 +1,4 @@
-package lack.fluidlib.mixin;
+package lack.fluidlib.mixin.entity;
 
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import lack.fluidlib.fluid.FluidProperties;
@@ -94,25 +94,33 @@ public abstract class EntityMixin implements EntityAccessor {
 
     @Inject(method = "updateSubmergedInWaterState", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isSubmergedIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
     public void submerged(CallbackInfo ci) {
-        this.submergedInSwimmable = FluidRegistry.getSwimmable().stream().anyMatch(this::isSubmergedIn);
-        this.submergedInNonswimmable = FluidRegistry.getNonswimmable().stream().anyMatch(this::isSubmergedIn);
+        this.submergedInSwimmable = FluidRegistry.getSwimmableSet().stream().anyMatch(this::isSubmergedIn);
+        this.submergedInNonswimmable = FluidRegistry.getNonswimmableSet().stream().anyMatch(this::isSubmergedIn);
     }
 
     @Redirect(method = "updateWaterState", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;updateMovementInFluid(Lnet/minecraft/registry/tag/TagKey;D)Z"))
-    public boolean update(Entity instance, TagKey<Fluid> tag, double a) {
-        boolean touching = false;
-        for (TagKey<Fluid> nonswimmable : FluidRegistry.getNonswimmable()) {
+    public boolean updateNonSwimmableState(Entity instance, TagKey<Fluid> tag, double a) {
+        boolean isTouchingNonSwimmable = false;
+        for (TagKey<Fluid> nonswimmable : FluidRegistry.getNonswimmableSet()) {
             double speed = FluidRegistry.getFluids().getOrDefault(nonswimmable, new LavaFluidProperties()).entityMovementSpeed(instance);
-            if (this.updateMovementInFluid(nonswimmable, speed) && !touching) {
-                touching = true;
+            if (this.updateMovementInFluid(nonswimmable, speed) && !isTouchingNonSwimmable) {
+                isTouchingNonSwimmable = true;
             }
-            //should not break
         }
 
-        this.touchingNonswimmable = touching;
-        return touching;
+        this.touchingNonswimmable = isTouchingNonSwimmable;
+        return isTouchingNonSwimmable;
     }
 
+    /**
+     * @author me
+     * @reason easier to overwrite instead
+     */
+    @Overwrite
+    public void checkWaterState() {
+        this.touchingWater = this.updateMovementInFluid(FluidTags.WATER, 0.014);
+        checkSwimmableState();
+    }
 
     @Unique
     void checkSwimmableState() {
@@ -120,25 +128,34 @@ public abstract class EntityMixin implements EntityAccessor {
         if (this.getVehicle() instanceof AbstractBoatEntity abstractBoatEntity && !((EntityAccessor) abstractBoatEntity).fluidlib$isSubmergedInSwimmable()) {
             this.touchingSwimmable = false;
         } else {
-            Optional<Float> happened = Optional.empty();
+            Optional<Float> lowestFallDamageMultiplier = Optional.empty();
+
             Map<TagKey<Fluid>, FluidProperties> fluids = FluidRegistry.getFluids();
-            for (TagKey<Fluid> swimmableFluid : FluidRegistry.getSwimmable()) {
 
+            for (TagKey<Fluid> swimmableFluid : FluidRegistry.getSwimmableSet()) {
                 FluidProperties fluidProperties = fluids.get(swimmableFluid);
-                double speed = fluidProperties != null ? fluidProperties.entityMovementSpeed(entity) : new WaterFluidProperties().entityMovementSpeed(entity);
 
-                float fallDamageMultiplier = fluidProperties != null ? fluidProperties.fallDamageMultiplier(entity) : 1.0f;
+                double movementSpeedInFluid = new WaterFluidProperties().entityMovementSpeed(entity);
+                float fallDamageMultiplier = 1.0f;
 
-                if (this.updateMovementInFluid(swimmableFluid, speed) && happened.isEmpty()) {
-                    happened = Optional.of(fallDamageMultiplier);
+                if (fluidProperties != null) {
+                    movementSpeedInFluid = fluidProperties.entityMovementSpeed(entity);
+                    fallDamageMultiplier = fluidProperties.fallDamageMultiplier(entity);
+                }
+
+                if (this.updateMovementInFluid(swimmableFluid, movementSpeedInFluid)) {
+                    lowestFallDamageMultiplier = Optional.of(lowestFallDamageMultiplier.isPresent() ?
+                        Math.min(fallDamageMultiplier, lowestFallDamageMultiplier.get()) :
+                        fallDamageMultiplier);
                 }
             }
-            if (happened.isPresent()) {
+
+            if (lowestFallDamageMultiplier.isPresent()) {
                 if (!this.touchingSwimmable && !this.firstUpdate) {
                     this.onSwimmingStart();
                 }
-                //Removes fall damage
-                if (happened.get() == 0f) {
+                //Disables fall damage if 0
+                if (lowestFallDamageMultiplier.get() == 0f) {
                     this.onLanding();
                 }
 
@@ -149,23 +166,14 @@ public abstract class EntityMixin implements EntityAccessor {
         }
     }
 
-    /**
-     * @author me
-     * @reason lazy
-     */
-    @Overwrite
-    public void checkWaterState() {
-        this.touchingWater = this.updateMovementInFluid(FluidTags.WATER, 0.014);
-        checkSwimmableState();
-    }
 
     @Redirect(method = "isInFluid", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isTouchingWater()Z"))
-    public boolean inFluid(Entity instance) {
+    public boolean redirectIsInWaterToSwimmableForIsInFluid(Entity instance) {
         return ((EntityAccessor) instance).fluidlib$isTouchingSwimmable();
     }
 
     @Redirect(method = "isInFluid", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isInLava()Z"))
-    public boolean inFluid2(Entity instance) {
+    public boolean redirectIsInLavaToNonswimmableForIsInFluid(Entity instance) {
         return ((EntityAccessor) instance).fluidlib$isTouchingNonswimmable();
     }
 
@@ -177,14 +185,8 @@ public abstract class EntityMixin implements EntityAccessor {
     @Inject(method = "baseTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isInLava()Z"))
     public void fallDamageMultiplier(CallbackInfo ci) {
         Entity entity = (Entity) (Object) this;
-        List<TagKey<Fluid>> allFluids = new ArrayList<>(FluidRegistry.getAll());
 
-        for (TagKey<Fluid> fluid : allFluids) {
-            if (fluidlib$isInFluid(fluid) && FluidRegistry.getFluids().containsKey(fluid)) {
-                this.fallDistance *= FluidRegistry.getFluids().get(fluid).fallDamageMultiplier(entity);
-                break;
-            }
-        }
+        this.fallDistance *= FluidRegistry.applyPredicateStream(entry -> fluidlib$isInFluid(entry.getKey())).map(entry -> entry.getValue().fallDamageMultiplier(entity)).findFirst().orElse(1.0f);
     }
 
     @Redirect(method = "applyMoveEffect", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isTouchingWater()Z"))
@@ -204,7 +206,7 @@ public abstract class EntityMixin implements EntityAccessor {
 
     @Redirect(method = "updateSwimming", at = @At(value = "INVOKE", target = "Lnet/minecraft/fluid/FluidState;isIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
     public boolean updateSwim4(FluidState instance, TagKey<Fluid> tag) {
-        return FluidRegistry.getSwimmable().stream().anyMatch(instance::isIn);
+        return FluidRegistry.getSwimmableSet().stream().anyMatch(instance::isIn);
     }
 
 

@@ -40,3 +40,4 @@ replay_*.log
 *.jfr
 
 /src/main/java/lack/fluidlib/example/
+/src/main/java/lack/fluidlib/mixin/example/
