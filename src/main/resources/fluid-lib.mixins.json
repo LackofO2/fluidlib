@@ -9,7 +9,6 @@
     "entity.MinecartControllersMixin$DefaultMinecartControllerMixin",
     "entity.MinecartControllersMixin$ExperimentalMinecartControllerMixin",
     "entity.PlayerMixin",
-    "example.FluidPropertyMixin",
     "fluidlog.BucketItemMixin",
     "fluidlog.LuminanceAccessor",
     "fluidlog.LuminanceMixin",
