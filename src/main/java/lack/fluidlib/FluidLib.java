@@ -20,7 +20,7 @@ public class FluidLib implements ModInitializer {
         // Proceed with mild caution.
 
     //todo
-        FluidExample.init();
+//        FluidExample.init();
 
     }
 
